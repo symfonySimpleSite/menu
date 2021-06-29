@@ -1,8 +1,0 @@
-symfony_simple_site_page:
-  resource: '@PageBundle/Resources/config/routes/all.yaml'
-
-symfony_simple_site_user:
-  resource: '@UserBundle/Resources/config/routes/all.yaml'
-
-symfony_simple_site_menu:
-  resource: '@MenuBundle/Resources/config/routes/all.yaml'
