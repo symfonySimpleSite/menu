@@ -1,0 +1,10 @@
+
+menu_admin:
+  prefix: /admin/menu
+  resource: '@MenuBundle/Resources/config/routes/admin.yaml'
+
+#menu_site:
+#  resource: '@MartenaSoftMenuBundle/Resources/config/routes/site.yaml'
+
+
+
