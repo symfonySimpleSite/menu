@@ -14,8 +14,16 @@
 
     </div>
     <div class="card-body">
-        <div id="menu-jstree">
-           {{ render(controller('SymfonySimpleSite\\Menu\\Controller\\AdminController::treeMenu')) }}
+        <div class="menu-tree">
+           {{ render(controller(
+               'SymfonySimpleSite\\Menu\\Controller\\AdminController::treeMenu',
+               { 'itemTemplate' : itemTemplate is defined ? itemTemplate : '@Menu/elements/tree_item.html.twig' }
+           )) }}
+
+          {% if itemsBottomTemplate is defined %}
+              {% include itemsBottomTemplate %}
+          {% endif %}
+
         </div>
     </div>
 </div>

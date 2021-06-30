@@ -97,9 +97,10 @@ class AdminController extends AbstractAdminController
         ]);
     }
 
-    public function treeMenu(MenuRepository $menuRepository): Response
+    public function treeMenu(MenuRepository $menuRepository, string $itemTemplate): Response
     {
         return $this->render('@Menu/admin/tree_menu.html.twig', [
+            'item_template' => $itemTemplate,
             'items' => $menuRepository
                 ->getAllQueryBuilder()
                 ->getQuery()

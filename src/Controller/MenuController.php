@@ -12,13 +12,17 @@ class MenuController extends AbstractPageController
     public function topMenu(int $rootId, MenuRepository $menuRepository): Response
     {
         $menu = $this->getEntityManager()->find(Menu::class, $rootId);
-        $items = $menuRepository
-            ->getAllSubItemsQueryBuilder($menu)
-            ->andWhere($menuRepository->getAlias().".lvl=:lvl")
-            ->setParameter('lvl', $menu->getLvl() + 1)
-            ->getQuery()
-            ->getResult()
-        ;
+        $items = [];
+        if ($menu) {
+            $items = $menuRepository
+                ->getAllSubItemsQueryBuilder($menu)
+                ->andWhere($menuRepository->getAlias().".lvl=:lvl")
+                ->setParameter('lvl', $menu->getLvl() + 1)
+                ->getQuery()
+                ->getResult()
+            ;
+        }
+
         return $this->render('@Menu/frontend/top_menu.html.twig',
             ['items' => $items]
         );
