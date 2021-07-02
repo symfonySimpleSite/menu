@@ -1,1 +1,6 @@
-<a href="{{ item.path ~'/'~ item.url }}">{{ item.name }}</a>
+{% set url = item.path ~'/'~ item.url %}
+{% if url != request.pathInfo %}
+    <a href="{{ item.path ~'/'~ item.url }}">{{ item.name }}</a>
+{% else %}
+    <strong>{{ item.name }}</strong>
+{% endif %}

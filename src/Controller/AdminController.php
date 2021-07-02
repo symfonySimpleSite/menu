@@ -25,6 +25,7 @@ class AdminController extends AbstractAdminController
     public function newRoot(Request $request, MenuRepository $menuRepository): Response
     {
         $menu = new Menu();
+
         $menu->setStatus(StatusInterface::STATUS_ACTIVE);
         $menu->setCreatedAt(new \DateTime('now'));
 
@@ -33,6 +34,7 @@ class AdminController extends AbstractAdminController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
+                $this->setMenuUrlPath($menu, $menuRepository);
                 $menu->setUrl($this->transliterate($menu->getUrl(), $menu->getName()));
                 $menuRepository->create($menu);
                 return $this->redirectToRoute('menu_admin_index');
@@ -60,6 +62,7 @@ class AdminController extends AbstractAdminController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
+                $this->setMenuUrlPath($menu, $menuRepository);
                 $menu->setUrl($this->transliterate($menu->getUrl(), $menu->getName()));
                 $menuRepository->create($menu, $parent);
                 return $this->redirectToRoute('menu_admin_index');
@@ -116,36 +119,5 @@ class AdminController extends AbstractAdminController
     }
 
 
-    private function setMenuUrlPath(MenuInterface $menu, MenuRepository $menuRepository, string $separator = '/'): void
-    {
-        $urlByName = $this->transliterate($menu->getUrl(), $menu->getName());
-        $menu->setUrl($urlByName);
 
-        $items = $menuRepository
-            ->getAllQueryBuilder($menu)
-            ->andWhere("{$menuRepository->getAlias()}.url IS NOT NULL")
-            ->getQuery()
-            ->getResult();
-
-
-
-        foreach ($items as $item) {
-
-            $parents = $menuRepository
-                ->getParentsByItemQueryBuilder($item)
-                ->andWhere("{$menuRepository->getAlias()}.url IS NOT NULL")
-                ->getQuery()
-                ->getResult();
-            ;
-            if (!empty($parents)) {
-
-                $path = '';
-                foreach ($parents as $parent) {
-                    $path .= $separator . $parent->getUrl();
-                }
-                $item->setPath($path);
-            }
-        }
-
-    }
 }
