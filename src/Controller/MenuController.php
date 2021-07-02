@@ -11,20 +11,16 @@ class MenuController extends AbstractPageController
 {
     public function topMenu(int $rootId, MenuRepository $menuRepository): Response
     {
-        $menu = $this->getEntityManager()->find(Menu::class, $rootId);
-        $items = [];
-        if ($menu) {
-            $items = $menuRepository
-                ->getAllSubItemsQueryBuilder($menu)
-                ->andWhere($menuRepository->getAlias().".lvl=:lvl")
-                ->setParameter('lvl', $menu->getLvl() + 1)
-                ->getQuery()
-                ->getResult()
-            ;
-        }
+        $items = $menuRepository->getItemsByIds($rootId, 1);
+        return $this->render('@Menu/frontend/top_menu.html.twig', ['items' => $items]);
+    }
 
-        return $this->render('@Menu/frontend/top_menu.html.twig',
-            ['items' => $items]
-        );
+    public function leftMenu(int $rootId, MenuRepository $menuRepository): Response
+    {
+        $items = $menuRepository->getItemsByIds($rootId);
+        return $this->render('@Menu/frontend/left_menu.html.twig', [
+            'items' => $items,
+            'item_template' => '@Menu/frontend/tree_item.html.twig'
+        ]);
     }
 }

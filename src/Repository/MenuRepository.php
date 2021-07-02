@@ -10,6 +10,7 @@ use SymfonySimpleSite\Common\Traits\AliasRepositoryTrait;
 use SymfonySimpleSite\Common\Traits\CommonRepository;
 use SymfonySimpleSite\Common\Traits\GetQueryBuilderRepositoryTrait;
 use SymfonySimpleSite\Menu\Entity\Config;
+use SymfonySimpleSite\Menu\Entity\Interfaces\MenuInterface;
 use SymfonySimpleSite\Menu\Entity\Menu;
 use SymfonySimpleSite\NestedSets\Entity\NodeInterface;
 use SymfonySimpleSite\NestedSets\Repository\NestedSetsCreateDeleteInterface;
@@ -45,6 +46,29 @@ class MenuRepository extends ServiceEntityRepository
         $this->setAlias('m');
     }
 
+
+    public function getItemsByIds(int $parentId, ?int $maxDeep = null): array
+    {
+        $parent = $this->find($parentId);
+
+        if (empty($parent)) {
+            return [];
+        }
+
+        $result = [
+            'parent' => $parent
+        ];
+
+        $queryBuilder = $this->getAllSubItemsQueryBuilder($parent);
+        if ($maxDeep !== null) {
+            $queryBuilder
+                ->andWhere("{$this->getAlias()}.lvl=:lvl")
+                ->setParameter('lvl', $parent->getLvl() + $maxDeep);
+        }
+        $result['items'] = $queryBuilder->getQuery()->getResult();
+        return $result;
+    }
+
     public function create(NodeInterface $node, ?NodeInterface $parent = null): NodeInterface
     {
         return $this->nestedSetsCreateDelete->create($node, $parent);
@@ -55,12 +79,19 @@ class MenuRepository extends ServiceEntityRepository
         $this->nestedSetsCreateDelete->delete($node, $isSafeDelete);
     }
 
-    public function getAllQueryBuilder(): QueryBuilder
+    public function getAllQueryBuilder(?NodeInterface $menu = null): QueryBuilder
     {
         $queryBuilder = $this
             ->getQueryBuilder()
             ->orderBy($this->getAlias() . ".tree", "ASC")
             ->addOrderBy($this->getAlias() . ".lft", "ASC");
+
+        if ($menu !== null) {
+            $queryBuilder
+                ->andWhere("{$this->getAlias()}.tree=:tree")
+                ->setParameter('tree', $menu->getTree())
+            ;
+        }
 
         return $queryBuilder;
     }
@@ -122,42 +153,5 @@ class MenuRepository extends ServiceEntityRepository
             ->andWhere("{$alias}.tree=:tree")->setParameter('tree', $menu->getTree());
     }
 
-    public function getConfig(MenuInterface $rootNode): Config
-    {
-        $config = null;
 
-        if (empty($config = $rootNode->getConfig())) {
-            $config = $this
-                ->getEntityManager()
-                ->getRepository(Config::class)
-                ->findOneByName(CommonEntityConfigInterface::DEFAULT_NAME);
-        }
-
-        if (empty($config)) {
-            $config = new Config();
-            $config->setUrlPathType(Config::URL_TYPE_PATH);
-        }
-
-        return $config;
-    }
-
-    public function updateUrlInSubElements(MenuInterface $menu, string $oldUrl): void
-    {
-        $items = $this
-            ->getAllQueryBuilder()
-            ->andWhere($this->getAlias().".tree=:tree")
-            ->setParameter("tree", $menu->getTree())
-            ->getQuery()
-            ->getResult()
-        ;
-
-        if (!empty($items)) {
-            foreach ($items as $item) {
-                if ($item->getType() == MenuInterface::URL_TYPE_TRANSLITERATED) {
-                    $newPath = str_replace($oldUrl, $menu->getUrl(), $item->getPath());
-                    $item->setPath($newPath);
-                }
-            }
-        }
-    }
 }

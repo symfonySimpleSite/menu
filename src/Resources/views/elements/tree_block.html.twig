@@ -16,12 +16,14 @@
     <div class="card-body">
         <div class="menu-tree">
            {{ render(controller(
-               'SymfonySimpleSite\\Menu\\Controller\\AdminController::treeMenu',
-               { 'itemTemplate' : itemTemplate is defined ? itemTemplate : '@Menu/elements/tree_item.html.twig' }
+               'SymfonySimpleSite\\Menu\\Controller\\AdminController::treeMenu', {
+                   itemTemplate : itemTemplate is defined ? itemTemplate : '@Menu/elements/tree_item.html.twig',
+                   entity: entity is defined ? entity : null
+               }
            )) }}
 
           {% if itemsBottomTemplate is defined %}
-              {% include itemsBottomTemplate %}
+              {% include itemsBottomTemplate with {entity: entity is defined ? entity : null} %}
           {% endif %}
 
         </div>

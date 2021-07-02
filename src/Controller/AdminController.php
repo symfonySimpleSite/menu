@@ -6,9 +6,11 @@ namespace SymfonySimpleSite\Menu\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use SymfonySimpleSite\Common\Interfaces\StatusInterface;
+use SymfonySimpleSite\Menu\Entity\Interfaces\MenuInterface;
 use SymfonySimpleSite\Menu\Entity\Menu;
 use SymfonySimpleSite\Menu\Form\MenuType;
 use SymfonySimpleSite\Menu\Repository\MenuRepository;
+use SymfonySimpleSite\NestedSets\Entity\NodeInterface;
 use SymfonySimpleSite\Page\Controller\AbstractAdminController;
 
 class AdminController extends AbstractAdminController
@@ -31,6 +33,7 @@ class AdminController extends AbstractAdminController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
+                $menu->setUrl($this->transliterate($menu->getUrl(), $menu->getName()));
                 $menuRepository->create($menu);
                 return $this->redirectToRoute('menu_admin_index');
             } catch (\Throwable $exception) {
@@ -57,6 +60,7 @@ class AdminController extends AbstractAdminController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
+                $menu->setUrl($this->transliterate($menu->getUrl(), $menu->getName()));
                 $menuRepository->create($menu, $parent);
                 return $this->redirectToRoute('menu_admin_index');
             } catch (\Throwable $exception) {
@@ -79,10 +83,12 @@ class AdminController extends AbstractAdminController
 
         $form = $this->createForm(MenuType::class, $menu);
         $form->handleRequest($request);
-
         if ($form->isSubmitted() && $form->isValid()) {
+
             try {
+                $this->setMenuUrlPath($menu, $menuRepository);
                 $menuRepository->create($menu);
+                $this->getEntityManager()->flush();
                 return $this->redirectToRoute('menu_admin_index');
             } catch (\Throwable $exception) {
                 throw $exception;
@@ -97,14 +103,49 @@ class AdminController extends AbstractAdminController
         ]);
     }
 
-    public function treeMenu(MenuRepository $menuRepository, string $itemTemplate): Response
+    public function treeMenu(MenuRepository $menuRepository, string $itemTemplate, $entity): Response
     {
         return $this->render('@Menu/admin/tree_menu.html.twig', [
             'item_template' => $itemTemplate,
+            'entity' => $entity,
             'items' => $menuRepository
                 ->getAllQueryBuilder()
                 ->getQuery()
                 ->getResult()
         ]);
+    }
+
+
+    private function setMenuUrlPath(MenuInterface $menu, MenuRepository $menuRepository, string $separator = '/'): void
+    {
+        $urlByName = $this->transliterate($menu->getUrl(), $menu->getName());
+        $menu->setUrl($urlByName);
+
+        $items = $menuRepository
+            ->getAllQueryBuilder($menu)
+            ->andWhere("{$menuRepository->getAlias()}.url IS NOT NULL")
+            ->getQuery()
+            ->getResult();
+
+
+
+        foreach ($items as $item) {
+
+            $parents = $menuRepository
+                ->getParentsByItemQueryBuilder($item)
+                ->andWhere("{$menuRepository->getAlias()}.url IS NOT NULL")
+                ->getQuery()
+                ->getResult();
+            ;
+            if (!empty($parents)) {
+
+                $path = '';
+                foreach ($parents as $parent) {
+                    $path .= $separator . $parent->getUrl();
+                }
+                $item->setPath($path);
+            }
+        }
+
     }
 }

@@ -22,6 +22,7 @@ class MenuType extends AbstractType
                     'required' => false
                 ]
             )
+            ->add('url')
             ->add('route')
         ;
     }

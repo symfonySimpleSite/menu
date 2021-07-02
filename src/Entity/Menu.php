@@ -6,6 +6,7 @@ use SymfonySimpleSite\Common\Interfaces\ChangeDataDayInterface;
 use SymfonySimpleSite\Common\Interfaces\StatusInterface;
 use SymfonySimpleSite\Common\Traits\ChangeDataDayTrait;
 use SymfonySimpleSite\Common\Traits\StatusTrait;
+use SymfonySimpleSite\Menu\Entity\Interfaces\MenuInterface;
 use SymfonySimpleSite\Menu\Repository\MenuRepository;
 use Doctrine\ORM\Mapping as ORM;
 use SymfonySimpleSite\NestedSets\Entity\NodeInterface;
@@ -29,7 +30,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  *          }
  *     )
  */
-class Menu implements NodeInterface, StatusInterface, ChangeDataDayInterface
+class Menu implements StatusInterface, ChangeDataDayInterface, MenuInterface
 {
     use StatusTrait, ChangeDataDayTrait;
     /**
@@ -61,16 +62,17 @@ class Menu implements NodeInterface, StatusInterface, ChangeDataDayInterface
     private ?int $parentId = null;
 
     /** @ORM\Column(type="string", nullable=true) */
-    private ?string $route;
-
-    /** @ORM\Column(type="string", nullable=true) */
     private ?string $url = null;
 
     /** @ORM\Column(type="string", nullable=true) */
-    private ?string $path;
+    private ?string $path = null;
 
-    /** @ORM\Column(type="smallint", nullable=true) */
-    private ?int $type;
+    /** @ORM\Column(type="string", nullable=true) */
+    private ?string $route = null;
+
+    /** @ORM\Column(type="string", nullable=true) */
+    private ?string $shortUrl = null;
+
 
     public function getId(): ?int
     {
@@ -149,16 +151,6 @@ class Menu implements NodeInterface, StatusInterface, ChangeDataDayInterface
         return $this;
     }
 
-    public function getRoute(): ?string
-    {
-        return $this->route;
-    }
-
-    public function setRoute(?string $route): self
-    {
-        $this->route = $route;
-        return $this;
-    }
 
     public function getUrl(): ?string
     {
@@ -169,6 +161,16 @@ class Menu implements NodeInterface, StatusInterface, ChangeDataDayInterface
     {
         $this->url = $url;
         return $this;
+    }
+
+    public function getShortUrl(): ?string
+    {
+        return $this->shortUrl;
+    }
+
+    public function setShortUrl(?string $shortUrl): void
+    {
+        $this->shortUrl = $shortUrl;
     }
 
     public function getPath(): ?string
@@ -182,30 +184,14 @@ class Menu implements NodeInterface, StatusInterface, ChangeDataDayInterface
         return $this;
     }
 
-    public function getType(): ?int
+    public function getRoute(): ?string
     {
-        return $this->type;
+        return $this->route;
     }
 
-    public function setType(?int $type): self
+    public function setRoute(?string $route): self
     {
-        $this->type = $type;
+        $this->route = $route;
         return $this;
-    }
-
-    public function getTransliteratedUrl(int $type = self::URL_TYPE_TRANSLITERATED): string
-    {
-        $transliteratorAny = \Transliterator::create('Any-Latin');
-        $return = $this->getUrl();
-
-        switch ($type) {
-            default: {
-                $return = $transliteratorAny->transliterate($return);
-                $return = preg_replace('/\W+/', '-', $return);
-                $return = strtolower($return);
-            }
-        }
-
-        return $return;
     }
 }
