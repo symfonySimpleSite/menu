@@ -47,9 +47,9 @@ class MenuRepository extends ServiceEntityRepository
     }
 
 
-    public function getItemsByIds(int $parentId, ?int $maxDeep = null): array
+    public function getItemsByName(string $name, ?int $maxDeep = null): array
     {
-        $parent = $this->find($parentId);
+        $parent = $this->findOneBy(['name'=>$name]);
 
         if (empty($parent)) {
             return [];

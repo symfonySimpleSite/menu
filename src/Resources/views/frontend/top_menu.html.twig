@@ -2,7 +2,7 @@
     <nav class="nav d-flex justify-content-between">
         {% if items['items'] is defined %}
             {% for item in items['items'] %}
-                <a class="p-2 link-secondary" href="#">{{ item.name }}</a>
+                <a class="p-2 link-secondary" href="{{ item.path ~'/'~ item.url }}">{{ item.name }}</a>
             {% endfor %}
         {% endif %}
     </nav>
